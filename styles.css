@@ -42,6 +42,14 @@ main {
   text-align: center;
   margin-bottom: 24px;
 }
+.flag-icon {
+  width: 96px;
+  height: auto;
+  display: block;
+  margin: 0 auto 12px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+}
 .hero h1 {
   font-size: clamp(1.6rem, 1.2rem + 2vw, 2.2rem);
   margin: 8px 0 4px;
