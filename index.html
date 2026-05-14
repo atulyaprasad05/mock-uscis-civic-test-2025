@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mock USCIS Civics Test 2025</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app" aria-live="polite">
+
+    <!-- Welcome view -->
+    <section id="view-welcome" class="view">
+      <header class="hero">
+        <h1>Mock USCIS Civics Test</h1>
+        <p class="subtitle">2025 (128-question) practice exam</p>
+      </header>
+      <div class="card">
+        <h2>How it works</h2>
+        <ul class="rules">
+          <li>You will be asked <strong>20 random questions</strong> drawn from a pool of 128.</li>
+          <li>Questions are picked <strong>proportionally</strong> across all civics topics.</li>
+          <li>Scoring is <strong>1 point</strong> for a fully correct answer, <strong>0</strong> otherwise &mdash; no partial credit.</li>
+          <li>You must answer at least <strong>12 out of 20</strong> correctly to pass.</li>
+          <li>Some questions are state-specific or about current officials &mdash; for those, you self-assess your answer.</li>
+        </ul>
+        <button id="btn-start" class="primary">Start Test</button>
+      </div>
+      <p class="footnote">Source: USCIS publication M-1778 (09/25) &mdash; <em>128 Civics Questions and Answers (2025 version)</em>.</p>
+    </section>
+
+    <!-- Quiz view -->
+    <section id="view-quiz" class="view" hidden>
+      <header class="quiz-header">
+        <div class="progress">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <span id="progress-label">Question 1 of 20</span>
+        </div>
+        <div class="topic-chip" id="topic-chip"></div>
+      </header>
+      <article class="card question-card">
+        <div class="meta" id="question-meta"></div>
+        <h2 id="question-prompt" class="prompt"></h2>
+        <p id="question-hint" class="hint" hidden></p>
+        <form id="answer-form" class="answer-form"></form>
+        <div id="feedback" class="feedback" hidden></div>
+        <div class="actions">
+          <button id="btn-submit" class="primary" disabled>Submit answer</button>
+          <button id="btn-next" class="primary" hidden>Next question</button>
+        </div>
+      </article>
+    </section>
+
+    <!-- Results view -->
+    <section id="view-results" class="view" hidden>
+      <header class="hero">
+        <div id="result-banner" class="banner"></div>
+        <h1 id="result-headline"></h1>
+        <p class="subtitle"><span id="result-score"></span> correct out of 20</p>
+      </header>
+      <div class="card">
+        <h2>Breakdown by topic</h2>
+        <div id="topic-breakdown" class="topic-breakdown"></div>
+      </div>
+      <div class="actions">
+        <button id="btn-review" class="primary">Review your answers</button>
+        <button id="btn-retake" class="secondary">Take another test</button>
+      </div>
+    </section>
+
+    <!-- Review view -->
+    <section id="view-review" class="view" hidden>
+      <header class="quiz-header">
+        <h1>Answer review</h1>
+        <button id="btn-back-results" class="secondary small">Back to results</button>
+      </header>
+      <div id="review-list" class="review-list"></div>
+      <div class="actions">
+        <button id="btn-retake-2" class="secondary">Take another test</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
