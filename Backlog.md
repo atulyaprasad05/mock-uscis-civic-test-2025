@@ -74,3 +74,18 @@ When a user signs in for the first time, prompt them to provide their location d
 - Fields: state, congressional district, home address (optional, for local official lookup)
 - Stored in the user's profile on the backend
 - Used to pre-fill correct answers for `userSpecific: true` questions (e.g., "Who is your senator?")
+
+---
+
+## 7. Report Card
+
+Users can generate a personal report card from the home page or at the end of any session. Summarizes overall progress across all activity.
+
+Report includes:
+
+- Total number of **Learn** sessions completed
+- Total number of **Test** sessions completed
+- Average score for Learn sessions
+- Average score for Test sessions
+- **Mastery percentage** — number of questions mastered out of 128 total
+- Breakdown of mastery by topic (e.g., "American Government: 12/45 mastered")
