@@ -7,6 +7,7 @@ import {
 import { score, correctIndexesFor } from "./scorer.js";
 
 const PASS_THRESHOLD = 12;
+const STORAGE_KEY = "civics_quiz_progress";
 
 const views = {
   welcome: document.getElementById("view-welcome"),
@@ -25,6 +26,28 @@ function showView(name) {
 let allQuestions = [];
 let state = null; // { questions, answers, currentIndex }
 
+function saveProgress(viewName) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ view: viewName, state }));
+  } catch (_) {}
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    const { view, state: s } = saved;
+    if (!["quiz", "results", "review"].includes(view)) return null;
+    if (!Array.isArray(s?.questions) || s.questions.length === 0) return null;
+    if (!Array.isArray(s?.answers) || s.answers.length !== s.questions.length) return null;
+    if (typeof s.currentIndex !== "number" || s.currentIndex < 0 || s.currentIndex >= s.questions.length) return null;
+    return saved;
+  } catch (_) {
+    return null;
+  }
+}
+
 async function loadQuestionBank() {
   const res = await fetch("data/questions.json", { cache: "no-cache" });
   if (!res.ok) throw new Error(`Failed to load questions.json: ${res.status}`);
@@ -33,6 +56,7 @@ async function loadQuestionBank() {
 }
 
 function startNewTest() {
+  localStorage.removeItem(STORAGE_KEY);
   const picked = selectQuestions(allQuestions);
   state = {
     questions: picked,
@@ -49,6 +73,7 @@ function startNewTest() {
   };
   showView("quiz");
   renderCurrent();
+  saveProgress("quiz");
 }
 
 // ---- Quiz rendering ----
@@ -209,6 +234,7 @@ function escapeHTML(s) {
 function gotoNext() {
   if (state.currentIndex < TEST_SIZE - 1) {
     state.currentIndex += 1;
+    saveProgress("quiz");
     renderCurrent();
   } else {
     showResults();
@@ -246,6 +272,7 @@ function showResults() {
     container.appendChild(div);
   }
   showView("results");
+  saveProgress("results");
 }
 
 // ---- Review ----
@@ -289,6 +316,7 @@ function showReview() {
     list.appendChild(item);
   });
   showView("review");
+  saveProgress("review");
 }
 
 function formatUserAnswer(q, a) {
@@ -332,6 +360,21 @@ async function init() {
       '<p>If you opened <code>index.html</code> directly, modules/fetch won\'t work over <code>file://</code>. ' +
       'Run a local server, e.g. <code>python -m http.server 8000</code> and visit ' +
       '<code>http://localhost:8000/</code>.</p>';
+    return;
+  }
+
+  const saved = loadProgress();
+  if (saved) {
+    state = saved.state;
+    if (saved.view === "quiz") {
+      showView("quiz");
+      renderCurrent();
+    } else if (saved.view === "results") {
+      showResults();
+    } else if (saved.view === "review") {
+      showResults();
+      showReview();
+    }
   }
 }
 
