@@ -1,20 +1,19 @@
 import os
 import secrets
-import smtplib
 import string
 import time
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 load_dotenv()
 
-GMAIL_USER = os.environ["GMAIL_USER"]
-GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
+SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]
+SENDER_EMAIL = os.environ["SENDER_EMAIL"]
 CODE_TTL = 600       # 10 minutes
 SESSION_TTL = 86400  # 24 hours
 
@@ -22,7 +21,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://atulyaprasad05.github.io"],
+    allow_origins=["https://atulyaprasad05.github.io", "http://localhost:8000"],
     allow_methods=["POST"],
     allow_headers=["*"],
 )
@@ -44,20 +43,17 @@ def generate_code() -> str:
     return "".join(secrets.choice(string.digits) for _ in range(6))
 
 
-def send_gmail(to: str, code: str) -> None:
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Your USCIS Civics Test verification code"
-    msg["From"] = GMAIL_USER
-    msg["To"] = to
-    msg.attach(MIMEText(
-        f"<p>Your verification code is: <strong style='font-size:1.5em'>{code}</strong></p>"
-        "<p>This code expires in 10 minutes.</p>",
-        "html",
-    ))
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-        server.sendmail(GMAIL_USER, to, msg.as_string())
+def send_email(to: str, code: str) -> None:
+    message = Mail(
+        from_email=SENDER_EMAIL,
+        to_emails=to,
+        subject="Your USCIS Civics Test verification code",
+        html_content=(
+            f"<p>Your verification code is: <strong style='font-size:1.5em'>{code}</strong></p>"
+            "<p>This code expires in 10 minutes.</p>"
+        ),
+    )
+    SendGridAPIClient(SENDGRID_API_KEY).send(message)
 
 
 @app.post("/auth/send-code")
@@ -68,7 +64,7 @@ async def send_code(req: SendCodeRequest):
         "expires_at": time.time() + CODE_TTL,
     }
     try:
-        send_gmail(req.email, code)
+        send_email(req.email, code)
     except Exception as e:
         del pending_codes[req.email]
         raise HTTPException(status_code=502, detail=f"Failed to send email: {e}")

@@ -9,15 +9,15 @@ The original static version lives in the root of this repo. This folder is self-
 ## Stack
 
 - **Frontend** — vanilla JS, no build step
-- **Backend** — Python / FastAPI, Gmail SMTP for sending codes
+- **Backend** — Python / FastAPI, SendGrid for sending codes
 
 ---
 
 ## Prerequisites
 
 - Python 3.10+
-- A Gmail account with **2-Step Verification** enabled
-- A Gmail **App Password** ([how to create one](https://support.google.com/accounts/answer/185833))
+- A [SendGrid](https://sendgrid.com) account (free tier — 100 emails/day)
+- A verified sender email in SendGrid (Settings → Sender Authentication → Single Sender Verification)
 
 ---
 
@@ -34,11 +34,11 @@ cp .env.example .env
 Edit `.env`:
 
 ```
-GMAIL_USER=you@gmail.com
-GMAIL_APP_PASSWORD=abcdefghijklmnop
+SENDGRID_API_KEY=SG.your_key_here
+SENDER_EMAIL=you@example.com
 ```
 
-> The App Password is a 16-character code from your Google Account → Security → App passwords. Do **not** use your regular Gmail password.
+> Get your API key from SendGrid → Settings → API Keys. The sender email must be verified via Single Sender Verification — no domain required.
 
 ### 2. Create a virtual environment and install dependencies
 
@@ -73,7 +73,7 @@ Then open `http://localhost:8000` in your browser.
 
 ## How it works
 
-1. User enters their email — backend generates a 6-digit code, stores it server-side, and sends it via Gmail
+1. User enters their email — backend generates a 6-digit code, stores it server-side, and sends it via SendGrid
 2. User enters the code — backend validates it and returns a session token
 3. Token is stored in `localStorage` — user is now authenticated and can take the test
 4. Session lasts 24 hours; codes expire after 10 minutes
