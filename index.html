@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Mock USCIS Civics Test 2025</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app" aria-live="polite">
+
+    <!-- Auth: email entry -->
+    <section id="view-auth-email" class="view" hidden>
+      <header class="hero">
+        <h1>Mock USCIS Civics Test</h1>
+        <p class="subtitle">Verify your email to begin</p>
+      </header>
+      <div class="card">
+        <h2>Enter your email</h2>
+        <p class="auth-hint">We'll send a 6-digit code to verify your identity.</p>
+        <div class="auth-field">
+          <label for="auth-email-input">Email address</label>
+          <input type="email" id="auth-email-input" class="text-input" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <p id="auth-email-error" class="auth-error" hidden></p>
+        <div class="actions">
+          <button id="btn-send-code" class="primary">Send code</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Auth: code entry -->
+    <section id="view-auth-code" class="view" hidden>
+      <header class="hero">
+        <h1>Mock USCIS Civics Test</h1>
+        <p class="subtitle">Check your inbox</p>
+      </header>
+      <div class="card">
+        <h2>Enter verification code</h2>
+        <p class="auth-hint">We sent a 6-digit code to <strong id="auth-code-email-display"></strong>.</p>
+        <div class="auth-field">
+          <label for="auth-code-input">Verification code</label>
+          <input type="text" id="auth-code-input" class="text-input" placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+        </div>
+        <p id="auth-code-message" class="auth-error" hidden></p>
+        <div class="actions">
+          <button id="btn-verify-code" class="primary">Verify</button>
+        </div>
+        <p class="auth-resend">Didn't get it? <button id="btn-resend-code" class="link-btn">Resend code</button></p>
+      </div>
+    </section>
+
+    <!-- Welcome view -->
+    <section id="view-welcome" class="view">
+      <header class="hero">
+        <svg class="flag-icon" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="U.S. flag">
+          <defs>
+            <polygon id="star" points="0,-1.4 0.32,-0.43 1.33,-0.43 0.51,0.16 0.82,1.13 0,0.55 -0.82,1.13 -0.51,0.16 -1.33,-0.43 -0.32,-0.43"/>
+          </defs>
+          <rect width="60" height="36" fill="#B22234"/>
+          <g fill="white">
+            <rect y="2.77" width="60" height="2.77"/>
+            <rect y="8.31" width="60" height="2.77"/>
+            <rect y="13.85" width="60" height="2.77"/>
+            <rect y="19.38" width="60" height="2.77"/>
+            <rect y="24.92" width="60" height="2.77"/>
+            <rect y="30.46" width="60" height="2.77"/>
+          </g>
+          <rect width="24" height="19.38" fill="#3C3B6E"/>
+          <g fill="white">
+            <use href="#star" x="3" y="3"/><use href="#star" x="8" y="3"/><use href="#star" x="13" y="3"/><use href="#star" x="18" y="3"/>
+            <use href="#star" x="5.5" y="6.5"/><use href="#star" x="10.5" y="6.5"/><use href="#star" x="15.5" y="6.5"/>
+            <use href="#star" x="3" y="10"/><use href="#star" x="8" y="10"/><use href="#star" x="13" y="10"/><use href="#star" x="18" y="10"/>
+            <use href="#star" x="5.5" y="13.5"/><use href="#star" x="10.5" y="13.5"/><use href="#star" x="15.5" y="13.5"/>
+            <use href="#star" x="3" y="17"/><use href="#star" x="8" y="17"/><use href="#star" x="13" y="17"/><use href="#star" x="18" y="17"/>
+          </g>
+        </svg>
+        <h1>Mock USCIS Civics Test</h1>
+        <p class="subtitle">2025 (128-question) practice exam</p>
+      </header>
+      <div class="card">
+        <h2>How it works</h2>
+        <ul class="rules">
+          <li>You will be asked <strong>20 random questions</strong> drawn from a pool of 128.</li>
+          <li>Questions are picked <strong>proportionally</strong> across all civics topics.</li>
+          <li>Scoring is <strong>1 point</strong> for a fully correct answer, <strong>0</strong> otherwise &mdash; no partial credit.</li>
+          <li>You must answer at least <strong>12 out of 20</strong> correctly to pass.</li>
+          <li>Some questions are state-specific or about current officials &mdash; for those, you self-assess your answer.</li>
+        </ul>
+        <button id="btn-start" class="primary">Start Test</button>
+      </div>
+      <p class="footnote">Source: USCIS publication M-1778 (09/25) &mdash; <em>128 Civics Questions and Answers (2025 version)</em>.</p>
+    </section>
+
+    <!-- Quiz view -->
+    <section id="view-quiz" class="view" hidden>
+      <header class="quiz-header">
+        <div class="progress">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <span id="progress-label">Question 1 of 20</span>
+        </div>
+        <div class="topic-chip" id="topic-chip"></div>
+      </header>
+      <article class="card question-card">
+        <div class="meta" id="question-meta"></div>
+        <h2 id="question-prompt" class="prompt"></h2>
+        <p id="question-hint" class="hint" hidden></p>
+        <form id="answer-form" class="answer-form"></form>
+        <div id="feedback" class="feedback" hidden></div>
+        <div class="actions">
+          <button id="btn-submit" class="primary" disabled>Submit answer</button>
+          <button id="btn-next" class="primary" hidden>Next question</button>
+        </div>
+      </article>
+    </section>
+
+    <!-- Results view -->
+    <section id="view-results" class="view" hidden>
+      <header class="hero">
+        <div id="result-banner" class="banner"></div>
+        <h1 id="result-headline"></h1>
+        <p class="subtitle"><span id="result-score"></span> correct out of 20</p>
+      </header>
+      <div class="card">
+        <h2>Breakdown by topic</h2>
+        <div id="topic-breakdown" class="topic-breakdown"></div>
+      </div>
+      <div class="actions">
+        <button id="btn-review" class="primary">Review your answers</button>
+        <button id="btn-retake" class="secondary">Take another test</button>
+      </div>
+    </section>
+
+    <!-- Review view -->
+    <section id="view-review" class="view" hidden>
+      <header class="quiz-header">
+        <h1>Answer review</h1>
+        <button id="btn-back-results" class="secondary small">Back to results</button>
+      </header>
+      <div id="review-list" class="review-list"></div>
+      <div class="actions">
+        <button id="btn-retake-2" class="secondary">Take another test</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
