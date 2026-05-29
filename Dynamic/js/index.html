@@ -131,6 +131,34 @@
       </div>
     </section>
 
+    <!-- Report view -->
+    <section id="view-report" class="view" hidden>
+      <header class="quiz-header">
+        <h1>Report Card</h1>
+        <button id="btn-back-report" class="secondary small">Back</button>
+      </header>
+
+      <div class="report-section">
+        <h2 class="report-section-title">Tests Taken</h2>
+        <div id="report-tests-list"></div>
+        <p id="report-no-tests" class="report-empty" hidden>No tests taken yet.</p>
+      </div>
+
+      <div class="report-section">
+        <h2 class="report-section-title">Summary</h2>
+        <div class="report-stat-row"><span>Total tests</span><strong id="report-total-tests">—</strong></div>
+        <div class="report-stat-row"><span>Average score</span><strong id="report-avg-score">—</strong></div>
+        <div class="report-stat-row"><span>Unique questions seen</span><strong id="report-unique-q">—</strong></div>
+        <p class="report-section-subtitle">By topic</p>
+        <div id="report-by-topic"></div>
+      </div>
+
+      <div class="report-section">
+        <h2 class="report-section-title">Mastery</h2>
+        <div id="report-mastery-rows"></div>
+      </div>
+    </section>
+
     <!-- Review view -->
     <section id="view-review" class="view" hidden>
       <header class="quiz-header">
@@ -161,6 +189,7 @@
       </button>
       <div id="account-dropdown" hidden>
         <p id="dropdown-email"></p>
+        <button id="btn-report" class="dropdown-action-btn">Report Card</button>
         <hr class="dropdown-divider" />
         <button id="btn-logout" class="logout-btn">Log out</button>
       </div>

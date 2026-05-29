@@ -17,6 +17,7 @@ const views = {
   quiz: document.getElementById("view-quiz"),
   results: document.getElementById("view-results"),
   review: document.getElementById("view-review"),
+  report: document.getElementById("view-report"),
 };
 
 function showView(name) {
@@ -29,6 +30,7 @@ function showView(name) {
 let allQuestions = [];
 let state = null; // { questions, answers, currentIndex }
 let pendingEmail = null;
+let _prevReportView = "welcome";
 
 function saveProgress(viewName) {
   try {
@@ -327,6 +329,124 @@ function renderAcceptedList(q) {
   return `<ul>${items}</ul>`;
 }
 
+async function submitTestResults() {
+  const token = getSessionToken();
+  if (!token) return;
+  const correctCount = state.answers.filter((a) => a.isCorrect).length;
+  const questions = state.questions.map((q, i) => {
+    const a = state.answers[i];
+    return {
+      question_id: q.id,
+      topic: q.topic,
+      correct: a.isCorrect ? 1 : 0,
+      user_answer: formatUserAnswer(q, a),
+    };
+  });
+  try {
+    await fetch("/tests", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ score: correctCount, questions }),
+    });
+  } catch (_) {}
+}
+
+async function fetchAndShowReport() {
+  document.getElementById("account-dropdown").hidden = true;
+  _prevReportView = Object.keys(views).find((k) => !views[k].hidden) || "welcome";
+  const token = getSessionToken();
+  if (!token) return;
+  let data;
+  try {
+    const res = await fetch("/report", {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error();
+    data = await res.json();
+  } catch (_) {
+    return;
+  }
+  renderReport(data);
+  showView("report");
+}
+
+function renderReport(data) {
+  const TOTAL_QUESTIONS = 128;
+
+  // Tests
+  const testsList = document.getElementById("report-tests-list");
+  const noTests = document.getElementById("report-no-tests");
+  testsList.innerHTML = "";
+  if (data.tests.length === 0) {
+    noTests.hidden = false;
+  } else {
+    noTests.hidden = true;
+    data.tests.forEach((t) => {
+      const row = document.createElement("div");
+      row.className = "test-history-row";
+      const date = new Date(t.taken_at).toLocaleDateString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+      });
+      const chips = t.topics
+        .map((tp) => `<span class="topic-chip-sm">${escapeHTML(tp)}</span>`)
+        .join("");
+      row.innerHTML = `
+        <span class="test-date">${date}</span>
+        <span class="test-score-badge">${t.score}&thinsp;/&thinsp;20</span>
+        <span class="test-topic-chips">${chips}</span>
+      `;
+      testsList.appendChild(row);
+    });
+  }
+
+  // Summary
+  document.getElementById("report-total-tests").textContent = data.summary.total_tests;
+  document.getElementById("report-avg-score").textContent = data.summary.total_tests
+    ? `${data.summary.avg_score} / 20`
+    : "—";
+  document.getElementById("report-unique-q").textContent =
+    `${data.summary.unique_questions} / ${TOTAL_QUESTIONS}`;
+
+  const byTopic = document.getElementById("report-by-topic");
+  byTopic.innerHTML = "";
+  for (const [topic, count] of Object.entries(data.summary.unique_by_topic)) {
+    const row = document.createElement("div");
+    row.className = "report-stat-row";
+    row.innerHTML = `<span>${escapeHTML(topic)}</span><span>${count} seen</span>`;
+    byTopic.appendChild(row);
+  }
+
+  // Mastery
+  const masteryContainer = document.getElementById("report-mastery-rows");
+  masteryContainer.innerHTML = "";
+  const m = data.mastery;
+  const threshold = data.mastery_threshold;
+  const seenCount = Object.values(m).reduce((s, c) => s + c, 0);
+  const levels = [
+    { label: "Never seen",                    count: TOTAL_QUESTIONS - seenCount, color: "var(--border)" },
+    { label: "Needs work (0)",                count: m["0"] || 0,                 color: "var(--wrong-border)" },
+    { label: "Learning (1)",                  count: m["1"] || 0,                 color: "#f59e0b" },
+    { label: "Almost there (2)",              count: m["2"] || 0,                 color: "#3b82f6" },
+    { label: `Mastered (${threshold})`,       count: m[String(threshold)] || 0,   color: "var(--correct-border)" },
+  ];
+  levels.forEach(({ label, count, color }) => {
+    const pct = Math.round((count / TOTAL_QUESTIONS) * 100);
+    const row = document.createElement("div");
+    row.className = "mastery-level-row";
+    row.innerHTML = `
+      <span class="mastery-label">${label}</span>
+      <div class="mastery-bar-wrap">
+        <div class="mastery-bar-fill" style="width:${pct}%;background:${color}"></div>
+      </div>
+      <span class="mastery-count">${count}</span>
+    `;
+    masteryContainer.appendChild(row);
+  });
+}
+
 function showToolbar() {
   document.getElementById("dropdown-email").textContent = getSessionEmail() || "";
   document.getElementById("user-toolbar").hidden = false;
@@ -354,6 +474,7 @@ function gotoNext() {
     saveProgress("quiz");
     renderCurrent();
   } else {
+    submitTestResults();
     showResults();
   }
 }
@@ -472,6 +593,9 @@ function wire() {
   document
     .getElementById("btn-back-results")
     .addEventListener("click", () => showView("results"));
+
+  document.getElementById("btn-report").addEventListener("click", fetchAndShowReport);
+  document.getElementById("btn-back-report").addEventListener("click", () => showView(_prevReportView));
 
   document.getElementById("btn-restart").addEventListener("click", () => {
     document.getElementById("account-dropdown").hidden = true;

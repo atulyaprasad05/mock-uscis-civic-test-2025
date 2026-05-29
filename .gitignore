@@ -2,6 +2,9 @@
 .env
 Dynamic/backend/.env
 
+# SQLite database — lives on the server, never committed
+Dynamic/backend/civics.db
+
 # Python
 __pycache__/
 *.py[cod]
