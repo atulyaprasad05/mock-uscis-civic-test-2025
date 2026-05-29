@@ -5,7 +5,7 @@ import {
   lockForm,
 } from "./renderers.js";
 import { score, correctIndexesFor } from "./scorer.js";
-import { getSessionToken, sendCode, verifyCode } from "./auth.js";
+import { getSessionToken, sendCode, verifyCode, saveSessionEmail, getSessionEmail, clearSession } from "./auth.js";
 
 const PASS_THRESHOLD = 12;
 const STORAGE_KEY = "civics_quiz_progress";
@@ -99,6 +99,7 @@ async function handleVerifyCode() {
 
   try {
     await verifyCode(pendingEmail, code);
+    saveSessionEmail(pendingEmail);
     await loadAndProceed();
   } catch (err) {
     msgEl.textContent = err.message;
@@ -139,6 +140,7 @@ async function loadAndProceed() {
       '<code>http://localhost:8000/</code>.</p>';
     return;
   }
+  showToolbar();
   const saved = loadProgress();
   if (saved) {
     state = saved.state;
@@ -325,6 +327,18 @@ function renderAcceptedList(q) {
   return `<ul>${items}</ul>`;
 }
 
+function showToolbar() {
+  document.getElementById("dropdown-email").textContent = getSessionEmail() || "";
+  document.getElementById("user-toolbar").hidden = false;
+  document.body.classList.add("has-toolbar");
+}
+
+function hideToolbar() {
+  document.getElementById("user-toolbar").hidden = true;
+  document.getElementById("account-dropdown").hidden = true;
+  document.body.classList.remove("has-toolbar");
+}
+
 function escapeHTML(s) {
   return String(s)
     .replace(/&/g, "&amp;")
@@ -458,6 +472,28 @@ function wire() {
   document
     .getElementById("btn-back-results")
     .addEventListener("click", () => showView("results"));
+
+  document.getElementById("btn-restart").addEventListener("click", () => {
+    document.getElementById("account-dropdown").hidden = true;
+    startNewTest();
+  });
+
+  document.getElementById("btn-account").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const dd = document.getElementById("account-dropdown");
+    dd.hidden = !dd.hidden;
+  });
+
+  document.getElementById("btn-logout").addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    clearSession();
+    hideToolbar();
+    showView("authEmail");
+  });
+
+  document.addEventListener("click", () => {
+    document.getElementById("account-dropdown").hidden = true;
+  });
 }
 
 async function init() {
