@@ -1,4 +1,4 @@
-const API_BASE = "https://mock-uscis-civic-test-2025.onrender.com";
+const API_BASE = "";
 const SESSION_KEY = "civics_session_token";
 
 export function getSessionToken() {
