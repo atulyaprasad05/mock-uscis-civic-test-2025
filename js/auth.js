@@ -1,5 +1,6 @@
 const API_BASE = "";
 const SESSION_KEY = "civics_session_token";
+const SESSION_EMAIL_KEY = "civics_session_email";
 
 export function getSessionToken() {
   return localStorage.getItem(SESSION_KEY);
@@ -7,6 +8,19 @@ export function getSessionToken() {
 
 export function saveSessionToken(token) {
   localStorage.setItem(SESSION_KEY, token);
+}
+
+export function saveSessionEmail(email) {
+  localStorage.setItem(SESSION_EMAIL_KEY, email);
+}
+
+export function getSessionEmail() {
+  return localStorage.getItem(SESSION_EMAIL_KEY);
+}
+
+export function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_EMAIL_KEY);
 }
 
 export async function sendCode(email) {

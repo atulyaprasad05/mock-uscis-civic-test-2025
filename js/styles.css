@@ -338,6 +338,79 @@ button.small { padding: 8px 12px; min-height: 36px; }
   text-decoration: underline;
 }
 
+/* User toolbar */
+#user-toolbar {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  min-height: unset;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.icon-btn:hover { background: var(--neutral-bg); }
+
+#account-wrap { position: relative; }
+
+#account-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  min-width: 200px;
+  padding: 12px;
+}
+
+#dropdown-email {
+  margin: 0 0 4px;
+  font-size: 0.875rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 8px 0;
+}
+
+.logout-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  min-height: unset;
+  border-radius: 6px;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.logout-btn:hover { background: var(--wrong-bg); }
+
+body.has-toolbar main { padding-top: 56px; }
+
 @media (max-width: 480px) {
   main { padding: 16px 12px 48px; }
   .card { padding: 16px; }

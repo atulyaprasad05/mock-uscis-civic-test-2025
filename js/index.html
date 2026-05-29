@@ -145,6 +145,28 @@
 
   </main>
 
+  <div id="user-toolbar" hidden>
+    <button id="btn-restart" class="icon-btn" aria-label="New test" title="Start a new test">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+      </svg>
+    </button>
+    <div id="account-wrap">
+      <button id="btn-account" class="icon-btn" aria-label="Account" title="Account">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </button>
+      <div id="account-dropdown" hidden>
+        <p id="dropdown-email"></p>
+        <hr class="dropdown-divider" />
+        <button id="btn-logout" class="logout-btn">Log out</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./app.js"></script>
 </body>
 </html>
