@@ -94,4 +94,4 @@ async def verify_code(req: VerifyCodeRequest):
 
 
 _js_dir = Path(__file__).resolve().parent.parent / "js"
-app.mount("/", StaticFiles(directory=_js_dir, html=True), name="static")
+app.mount("/", StaticFiles(directory="/opt/sneha-civics/app/dynamic/js", html=True), name="frontend")
