@@ -4,8 +4,11 @@ import string
 import time
 
 from dotenv import load_dotenv
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -88,3 +91,7 @@ async def verify_code(req: VerifyCodeRequest):
         "expires_at": time.time() + SESSION_TTL,
     }
     return {"token": token}
+
+
+_js_dir = Path(__file__).resolve().parent.parent / "js"
+app.mount("/", StaticFiles(directory=_js_dir, html=True), name="static")
