@@ -461,6 +461,8 @@ button.small { padding: 8px 12px; min-height: 36px; }
 .dropdown-action-btn:hover { background: var(--neutral-bg); }
 
 /* User toolbar */
+#user-toolbar[hidden] { display: none; }
+
 #user-toolbar {
   position: fixed;
   top: 12px;
