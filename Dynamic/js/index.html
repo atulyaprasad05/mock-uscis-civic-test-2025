@@ -50,6 +50,64 @@
       </div>
     </section>
 
+    <!-- Name entry (new users only) -->
+    <section id="view-name-entry" class="view" hidden>
+      <header class="hero">
+        <h1>Mock USCIS Civics Test</h1>
+        <p class="subtitle">One more thing</p>
+      </header>
+      <div class="card">
+        <h2>What's your name?</h2>
+        <p class="auth-hint">We'll use this to personalize your experience.</p>
+        <div class="auth-field">
+          <label for="name-input">Your name</label>
+          <input type="text" id="name-input" class="text-input" placeholder="First name" autocomplete="given-name" />
+        </div>
+        <div class="actions">
+          <button id="btn-name-submit" class="primary">Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Home / mode picker -->
+    <section id="view-home" class="view" hidden>
+      <header class="hero">
+        <svg class="flag-icon" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="U.S. flag">
+          <defs>
+            <polygon id="star2" points="0,-1.4 0.32,-0.43 1.33,-0.43 0.51,0.16 0.82,1.13 0,0.55 -0.82,1.13 -0.51,0.16 -1.33,-0.43 -0.32,-0.43"/>
+          </defs>
+          <rect width="60" height="36" fill="#B22234"/>
+          <g fill="white">
+            <rect y="2.77" width="60" height="2.77"/>
+            <rect y="8.31" width="60" height="2.77"/>
+            <rect y="13.85" width="60" height="2.77"/>
+            <rect y="19.38" width="60" height="2.77"/>
+            <rect y="24.92" width="60" height="2.77"/>
+            <rect y="30.46" width="60" height="2.77"/>
+          </g>
+          <rect width="24" height="19.38" fill="#3C3B6E"/>
+          <g fill="white">
+            <use href="#star2" x="3" y="3"/><use href="#star2" x="8" y="3"/><use href="#star2" x="13" y="3"/><use href="#star2" x="18" y="3"/>
+            <use href="#star2" x="5.5" y="6.5"/><use href="#star2" x="10.5" y="6.5"/><use href="#star2" x="15.5" y="6.5"/>
+            <use href="#star2" x="3" y="10"/><use href="#star2" x="8" y="10"/><use href="#star2" x="13" y="10"/><use href="#star2" x="18" y="10"/>
+            <use href="#star2" x="5.5" y="13.5"/><use href="#star2" x="10.5" y="13.5"/><use href="#star2" x="15.5" y="13.5"/>
+            <use href="#star2" x="3" y="17"/><use href="#star2" x="8" y="17"/><use href="#star2" x="13" y="17"/><use href="#star2" x="18" y="17"/>
+          </g>
+        </svg>
+        <h1>Mock USCIS Civics Test</h1>
+        <p class="subtitle">2025 (128-question) practice exam</p>
+      </header>
+      <div class="card">
+        <h2 id="home-greeting"></h2>
+        <p class="auth-hint">Practice the 128 official USCIS civics questions for the 2025 naturalization interview. Choose a mode to get started.</p>
+        <div class="actions">
+          <button id="btn-learn-mode" class="primary">Learn Mode</button>
+          <button id="btn-mock-test" class="secondary" disabled>Mock Test</button>
+        </div>
+      </div>
+      <p class="footnote">Source: USCIS publication M-1778 (09/25) &mdash; <em>128 Civics Questions and Answers (2025 version)</em>.</p>
+    </section>
+
     <!-- Welcome view -->
     <section id="view-welcome" class="view">
       <header class="hero">
@@ -188,6 +246,7 @@
         </svg>
       </button>
       <div id="account-dropdown" hidden>
+        <p id="dropdown-name"></p>
         <p id="dropdown-email"></p>
         <button id="btn-report" class="dropdown-action-btn">Report Card</button>
         <hr class="dropdown-divider" />
