@@ -518,13 +518,15 @@ function renderReport(data) {
 function showToolbar() {
   document.getElementById("dropdown-name").textContent = getUserName() || "";
   document.getElementById("dropdown-email").textContent = getSessionEmail() || "";
-  document.getElementById("user-toolbar").hidden = false;
+  document.getElementById("user-toolbar").style.display = "flex";
   document.body.classList.add("has-toolbar");
 }
 
 function hideToolbar() {
-  document.getElementById("user-toolbar").hidden = true;
+  document.getElementById("user-toolbar").style.display = "none";
   document.getElementById("account-dropdown").hidden = true;
+  document.getElementById("dropdown-name").textContent = "";
+  document.getElementById("dropdown-email").textContent = "";
   document.body.classList.remove("has-toolbar");
 }
 
@@ -683,12 +685,13 @@ function wire() {
   });
 
   document.getElementById("btn-logout").addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY);
-    clearSession();
+    localStorage.clear();
+    state = null;
+    allQuestions = [];
+    pendingEmail = null;
     hideToolbar();
     document.getElementById("auth-email-input").value = "";
     document.getElementById("auth-email-error").hidden = true;
-    pendingEmail = null;
     showView("authEmail");
   });
 

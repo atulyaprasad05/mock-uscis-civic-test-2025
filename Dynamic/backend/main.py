@@ -1,10 +1,14 @@
 import os
 import secrets
+import smtplib
 import sqlite3
+import ssl
 import string
 import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from dotenv import load_dotenv
 from pathlib import Path
@@ -13,12 +17,10 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 
 load_dotenv()
 
-SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]
+GMAIL_APP_PASSWORD = os.environ["GMAIL_APP_PASSWORD"]
 SENDER_EMAIL = os.environ["SENDER_EMAIL"]
 CODE_TTL = 600        # 10 minutes
 SESSION_TTL = 86400   # 24 hours
@@ -140,16 +142,19 @@ def generate_code() -> str:
 
 
 def send_email(to: str, code: str) -> None:
-    message = Mail(
-        from_email=SENDER_EMAIL,
-        to_emails=to,
-        subject="Your USCIS Civics Test verification code",
-        html_content=(
-            f"<p>Your verification code is: <strong style='font-size:1.5em'>{code}</strong></p>"
-            "<p>This code expires in 10 minutes.</p>"
-        ),
-    )
-    SendGridAPIClient(SENDGRID_API_KEY).send(message)
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Your USCIS Civics Test verification code"
+    msg["From"] = SENDER_EMAIL
+    msg["To"] = to
+    msg.attach(MIMEText(
+        f"<p>Your verification code is: <strong style='font-size:1.5em'>{code}</strong></p>"
+        "<p>This code expires in 10 minutes.</p>",
+        "html",
+    ))
+    ctx = ssl.create_default_context()
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ctx) as server:
+        server.login(SENDER_EMAIL, GMAIL_APP_PASSWORD)
+        server.sendmail(SENDER_EMAIL, to, msg.as_string())
 
 
 # --- Routes ---
