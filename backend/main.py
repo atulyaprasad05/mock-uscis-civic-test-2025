@@ -129,6 +129,10 @@ class SubmitTestRequest(BaseModel):
     questions: list[QuestionResult]
 
 
+class UpdateProfileRequest(BaseModel):
+    name: str
+
+
 # --- Email ---
 
 def generate_code() -> str:
@@ -199,6 +203,27 @@ async def verify_code(req: VerifyCodeRequest):
         "expires_at": time.time() + SESSION_TTL,
     }
     return {"token": token, "is_new_user": is_new_user}
+
+
+@app.get("/profile")
+async def get_profile(authorization: str = Header(...)):
+    token = authorization.removeprefix("Bearer ").strip()
+    user_id = get_current_user(token)
+    with get_db() as db:
+        row = db.execute("SELECT name, email FROM users WHERE id = ?", (user_id,)).fetchone()
+    return {"name": row["name"] if row else None, "email": row["email"] if row else None}
+
+
+@app.post("/profile")
+async def update_profile(req: UpdateProfileRequest, authorization: str = Header(...)):
+    token = authorization.removeprefix("Bearer ").strip()
+    user_id = get_current_user(token)
+    name = req.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty.")
+    with get_db() as db:
+        db.execute("UPDATE users SET name = ? WHERE id = ?", (name, user_id))
+    return {"ok": True}
 
 
 @app.post("/tests")

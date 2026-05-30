@@ -5,7 +5,7 @@ import {
   lockForm,
 } from "./renderers.js";
 import { score, correctIndexesFor } from "./scorer.js";
-import { getSessionToken, sendCode, verifyCode, saveSessionEmail, getSessionEmail, clearSession } from "./auth.js";
+import { getSessionToken, sendCode, verifyCode, saveSessionEmail, getSessionEmail, clearSession, getUserName, saveUserName, fetchProfile, saveName } from "./auth.js";
 
 const PASS_THRESHOLD = 12;
 const STORAGE_KEY = "civics_quiz_progress";
@@ -13,6 +13,8 @@ const STORAGE_KEY = "civics_quiz_progress";
 const views = {
   authEmail: document.getElementById("view-auth-email"),
   authCode: document.getElementById("view-auth-code"),
+  nameEntry: document.getElementById("view-name-entry"),
+  home: document.getElementById("view-home"),
   welcome: document.getElementById("view-welcome"),
   quiz: document.getElementById("view-quiz"),
   results: document.getElementById("view-results"),
@@ -30,7 +32,8 @@ function showView(name) {
 let allQuestions = [];
 let state = null; // { questions, answers, currentIndex }
 let pendingEmail = null;
-let _prevReportView = "welcome";
+let _prevReportView = "home";
+let _questionsPromise = null;
 
 function saveProgress(viewName) {
   try {
@@ -77,8 +80,14 @@ async function handleSendCode() {
     await sendCode(email);
     pendingEmail = email;
     document.getElementById("auth-code-email-display").textContent = email;
+    const codeInput = document.getElementById("auth-code-input");
+    const verifyBtn = document.getElementById("btn-verify-code");
+    codeInput.value = "";
+    document.getElementById("auth-code-message").hidden = true;
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = "Verify";
     showView("authCode");
-    document.getElementById("auth-code-input").focus();
+    codeInput.focus();
   } catch (err) {
     errorEl.textContent = err.message;
     errorEl.hidden = false;
@@ -100,9 +109,15 @@ async function handleVerifyCode() {
   msgEl.hidden = true;
 
   try {
-    await verifyCode(pendingEmail, code);
+    const { is_new_user } = await verifyCode(pendingEmail, code);
     saveSessionEmail(pendingEmail);
-    await loadAndProceed();
+    if (is_new_user) {
+      _questionsPromise = loadQuestionBank().then(q => { allQuestions = q; });
+      showView("nameEntry");
+      document.getElementById("name-input").focus();
+    } else {
+      await loadAndProceed();
+    }
   } catch (err) {
     msgEl.textContent = err.message;
     msgEl.className = "auth-error";
@@ -127,6 +142,48 @@ async function handleResendCode() {
   }
 }
 
+async function handleNameSubmit() {
+  const input = document.getElementById("name-input");
+  const name = input.value.trim();
+  if (!name) return;
+
+  const btn = document.getElementById("btn-name-submit");
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  try {
+    await Promise.all([
+      saveName(name, getSessionToken()).catch(() => {}),
+      _questionsPromise,
+    ]);
+    saveUserName(name);
+    showToolbar();
+    showHome(name, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Continue";
+  }
+}
+
+async function getUserDisplayName() {
+  const cached = getUserName();
+  if (cached) return cached;
+  try {
+    const { name, email } = await fetchProfile(getSessionToken());
+    if (name) saveUserName(name);
+    if (email && !getSessionEmail()) saveSessionEmail(email);
+    return name || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function showHome(name, isNew) {
+  document.getElementById("home-greeting").textContent =
+    isNew ? `Welcome, ${name}!` : `Welcome back, ${name}!`;
+  showView("home");
+}
+
 // ---- Load questions and restore/show correct view ----
 async function loadAndProceed() {
   try {
@@ -142,6 +199,7 @@ async function loadAndProceed() {
       '<code>http://localhost:8000/</code>.</p>';
     return;
   }
+  const name = await getUserDisplayName();
   showToolbar();
   const saved = loadProgress();
   if (saved) {
@@ -155,10 +213,20 @@ async function loadAndProceed() {
       showResults();
       showReview();
     } else {
-      showView("welcome");
+      routeToHomeOrName(name);
     }
   } else {
-    showView("welcome");
+    routeToHomeOrName(name);
+  }
+}
+
+function routeToHomeOrName(name) {
+  if (name) {
+    showHome(name, false);
+  } else {
+    _questionsPromise = Promise.resolve();
+    showView("nameEntry");
+    document.getElementById("name-input").focus();
   }
 }
 
@@ -448,6 +516,7 @@ function renderReport(data) {
 }
 
 function showToolbar() {
+  document.getElementById("dropdown-name").textContent = getUserName() || "";
   document.getElementById("dropdown-email").textContent = getSessionEmail() || "";
   document.getElementById("user-toolbar").hidden = false;
   document.body.classList.add("has-toolbar");
@@ -584,6 +653,11 @@ function wire() {
   document.getElementById("auth-code-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleVerifyCode();
   });
+  document.getElementById("btn-name-submit").addEventListener("click", handleNameSubmit);
+  document.getElementById("name-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleNameSubmit();
+  });
+  document.getElementById("btn-learn-mode").addEventListener("click", () => showView("welcome"));
   document.getElementById("btn-start").addEventListener("click", startNewTest);
   els.submit.addEventListener("click", submitAnswer);
   els.next.addEventListener("click", gotoNext);
@@ -599,7 +673,7 @@ function wire() {
 
   document.getElementById("btn-restart").addEventListener("click", () => {
     document.getElementById("account-dropdown").hidden = true;
-    startNewTest();
+    showView("welcome");
   });
 
   document.getElementById("btn-account").addEventListener("click", (e) => {
@@ -612,6 +686,9 @@ function wire() {
     localStorage.removeItem(STORAGE_KEY);
     clearSession();
     hideToolbar();
+    document.getElementById("auth-email-input").value = "";
+    document.getElementById("auth-email-error").hidden = true;
+    pendingEmail = null;
     showView("authEmail");
   });
 
