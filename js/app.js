@@ -15,6 +15,7 @@ const views = {
   authCode: document.getElementById("view-auth-code"),
   nameEntry: document.getElementById("view-name-entry"),
   home: document.getElementById("view-home"),
+  mockWelcome: document.getElementById("view-mock-welcome"),
   welcome: document.getElementById("view-welcome"),
   quiz: document.getElementById("view-quiz"),
   results: document.getElementById("view-results"),
@@ -35,6 +36,7 @@ let pendingEmail = null;
 let _prevReportView = "home";
 let _questionsPromise = null;
 let masteredIds = new Set();
+let quizMode = "learn"; // "learn" | "test"
 
 function saveProgress(viewName) {
   try {
@@ -82,9 +84,15 @@ function showMasteryOpt() {
 }
 
 async function goToWelcome() {
+  quizMode = "learn";
   await fetchMastery();
   showMasteryOpt();
   showView("welcome");
+}
+
+function goToMockTest() {
+  quizMode = "test";
+  showView("mockWelcome");
 }
 
 async function loadQuestionBank() {
@@ -263,21 +271,31 @@ function routeToHomeOrName(name) {
 function startNewTest() {
   localStorage.removeItem(STORAGE_KEY);
   let pool = allQuestions;
-  const excludeCb = document.getElementById("exclude-mastered-cb");
-  if (excludeCb?.checked && masteredIds.size > 0) {
-    const unmastered = allQuestions.filter(q => !masteredIds.has(q.id));
-    if (unmastered.length >= TEST_SIZE) {
-      pool = unmastered;
-    } else {
-      const extra = shuffle(allQuestions.filter(q => masteredIds.has(q.id)));
-      pool = [...unmastered, ...extra.slice(0, TEST_SIZE - unmastered.length)];
+  if (quizMode === "learn") {
+    const excludeCb = document.getElementById("exclude-mastered-cb");
+    if (excludeCb?.checked && masteredIds.size > 0) {
+      const unmastered = allQuestions.filter(q => !masteredIds.has(q.id));
+      if (unmastered.length >= TEST_SIZE) {
+        pool = unmastered;
+      } else {
+        const extra = shuffle(allQuestions.filter(q => masteredIds.has(q.id)));
+        pool = [...unmastered, ...extra.slice(0, TEST_SIZE - unmastered.length)];
+      }
     }
   }
-  const picked = selectQuestions(pool);
+  const rawPicked = selectQuestions(pool);
+  const questions = quizMode === "test"
+    ? rawPicked.map(q => ({
+        ...q,
+        type: "open",
+        acceptableAnswers: q.optionCorrect || q.acceptableAnswers || q.correct,
+        correct: q.optionCorrect || q.correct,
+      }))
+    : rawPicked;
   state = {
-    questions: picked,
+    questions,
     currentIndex: 0,
-    answers: picked.map((q) => ({
+    answers: questions.map((q) => ({
       questionId: q.id,
       questionNumber: q.questionNumber,
       displayOptions: buildOptionsForInstance(q),
@@ -458,7 +476,7 @@ async function submitTestResults() {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify({ score: correctCount, questions }),
+      body: JSON.stringify({ score: correctCount, questions, mode: quizMode }),
     });
   } catch (_) {}
 }
@@ -705,18 +723,20 @@ function wire() {
   els.submit.addEventListener("click", submitAnswer);
   els.next.addEventListener("click", gotoNext);
   document.getElementById("btn-review").addEventListener("click", showReview);
-  document.getElementById("btn-retake").addEventListener("click", goToWelcome);
-  document.getElementById("btn-retake-2").addEventListener("click", goToWelcome);
+  document.getElementById("btn-retake").addEventListener("click", () => showView("home"));
+  document.getElementById("btn-retake-2").addEventListener("click", () => showView("home"));
   document
     .getElementById("btn-back-results")
     .addEventListener("click", () => showView("results"));
 
+  document.getElementById("btn-mock-test").addEventListener("click", goToMockTest);
+  document.getElementById("btn-mock-start").addEventListener("click", startNewTest);
   document.getElementById("btn-report").addEventListener("click", fetchAndShowReport);
   document.getElementById("btn-back-report").addEventListener("click", () => showView(_prevReportView));
 
   document.getElementById("btn-restart").addEventListener("click", () => {
     document.getElementById("account-dropdown").hidden = true;
-    goToWelcome();
+    showView("home");
   });
 
   document.getElementById("btn-account").addEventListener("click", (e) => {
@@ -730,6 +750,8 @@ function wire() {
     state = null;
     allQuestions = [];
     pendingEmail = null;
+    masteredIds = new Set();
+    quizMode = "learn";
     hideToolbar();
     document.getElementById("auth-email-input").value = "";
     document.getElementById("auth-email-error").hidden = true;

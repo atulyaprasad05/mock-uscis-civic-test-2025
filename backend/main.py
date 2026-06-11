@@ -88,6 +88,10 @@ def init_db() -> None:
                 PRIMARY KEY (user_id, question_id)
             );
         """)
+        try:
+            db.execute("ALTER TABLE tests ADD COLUMN mode TEXT NOT NULL DEFAULT 'learn'")
+        except Exception:
+            pass
 
 
 @app.on_event("startup")
@@ -129,6 +133,7 @@ class QuestionResult(BaseModel):
 class SubmitTestRequest(BaseModel):
     score: int
     questions: list[QuestionResult]
+    mode: str = "learn"
 
 
 class UpdateProfileRequest(BaseModel):
@@ -239,8 +244,8 @@ async def submit_test(req: SubmitTestRequest, authorization: str = Header(...)):
     now = now_utc()
     with get_db() as db:
         cursor = db.execute(
-            "INSERT INTO tests (user_id, taken_at, score) VALUES (?, ?, ?)",
-            (user_id, now, req.score),
+            "INSERT INTO tests (user_id, taken_at, score, mode) VALUES (?, ?, ?, ?)",
+            (user_id, now, req.score, req.mode),
         )
         test_id = cursor.lastrowid
 
@@ -249,23 +254,24 @@ async def submit_test(req: SubmitTestRequest, authorization: str = Header(...)):
             [(test_id, q.question_id, q.topic, q.correct, q.user_answer) for q in req.questions],
         )
 
-        for q in req.questions:
-            if q.correct:
-                db.execute(
-                    """
-                    INSERT INTO user_mastery (user_id, question_id, level) VALUES (?, ?, 1)
-                    ON CONFLICT(user_id, question_id) DO UPDATE SET level = level + 1
-                    """,
-                    (user_id, q.question_id),
-                )
-            else:
-                db.execute(
-                    """
-                    INSERT INTO user_mastery (user_id, question_id, level) VALUES (?, ?, 0)
-                    ON CONFLICT(user_id, question_id) DO UPDATE SET level = 0
-                    """,
-                    (user_id, q.question_id),
-                )
+        if req.mode == "learn":
+            for q in req.questions:
+                if q.correct:
+                    db.execute(
+                        """
+                        INSERT INTO user_mastery (user_id, question_id, level) VALUES (?, ?, 1)
+                        ON CONFLICT(user_id, question_id) DO UPDATE SET level = level + 1
+                        """,
+                        (user_id, q.question_id),
+                    )
+                else:
+                    db.execute(
+                        """
+                        INSERT INTO user_mastery (user_id, question_id, level) VALUES (?, ?, 0)
+                        ON CONFLICT(user_id, question_id) DO UPDATE SET level = 0
+                        """,
+                        (user_id, q.question_id),
+                    )
 
     return {"test_id": test_id}
 

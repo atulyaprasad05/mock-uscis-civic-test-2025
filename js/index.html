@@ -102,8 +102,49 @@
         <p class="auth-hint">Practice the 128 official USCIS civics questions for the 2025 naturalization interview. Choose a mode to get started.</p>
         <div class="actions">
           <button id="btn-learn-mode" class="primary">Learn Mode</button>
-          <button id="btn-mock-test" class="secondary" disabled>Mock Test</button>
+          <button id="btn-mock-test" class="secondary">Mock Test</button>
         </div>
+      </div>
+      <p class="footnote">Source: USCIS publication M-1778 (09/25) &mdash; <em>128 Civics Questions and Answers (2025 version)</em>.</p>
+    </section>
+
+    <!-- Mock test start screen -->
+    <section id="view-mock-welcome" class="view" hidden>
+      <header class="hero">
+        <svg class="flag-icon" viewBox="0 0 60 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="U.S. flag">
+          <defs>
+            <polygon id="star3" points="0,-1.4 0.32,-0.43 1.33,-0.43 0.51,0.16 0.82,1.13 0,0.55 -0.82,1.13 -0.51,0.16 -1.33,-0.43 -0.32,-0.43"/>
+          </defs>
+          <rect width="60" height="36" fill="#B22234"/>
+          <g fill="white">
+            <rect y="2.77" width="60" height="2.77"/>
+            <rect y="8.31" width="60" height="2.77"/>
+            <rect y="13.85" width="60" height="2.77"/>
+            <rect y="19.38" width="60" height="2.77"/>
+            <rect y="24.92" width="60" height="2.77"/>
+            <rect y="30.46" width="60" height="2.77"/>
+          </g>
+          <rect width="24" height="19.38" fill="#3C3B6E"/>
+          <g fill="white">
+            <use href="#star3" x="3" y="3"/><use href="#star3" x="8" y="3"/><use href="#star3" x="13" y="3"/><use href="#star3" x="18" y="3"/>
+            <use href="#star3" x="5.5" y="6.5"/><use href="#star3" x="10.5" y="6.5"/><use href="#star3" x="15.5" y="6.5"/>
+            <use href="#star3" x="3" y="10"/><use href="#star3" x="8" y="10"/><use href="#star3" x="13" y="10"/><use href="#star3" x="18" y="10"/>
+            <use href="#star3" x="5.5" y="13.5"/><use href="#star3" x="10.5" y="13.5"/><use href="#star3" x="15.5" y="13.5"/>
+            <use href="#star3" x="3" y="17"/><use href="#star3" x="8" y="17"/><use href="#star3" x="13" y="17"/><use href="#star3" x="18" y="17"/>
+          </g>
+        </svg>
+        <h1>Mock USCIS Civics Test</h1>
+        <p class="subtitle">Mock Test mode</p>
+      </header>
+      <div class="card">
+        <h2>How it works</h2>
+        <ul class="rules">
+          <li>You will be asked <strong>20 random questions</strong> — no answer choices shown.</li>
+          <li>Type your answer; it will be scored automatically where possible.</li>
+          <li>Where auto-scoring isn't possible, you self-assess.</li>
+          <li>Results are saved but <strong>do not affect your mastery levels</strong>.</li>
+        </ul>
+        <button id="btn-mock-start" class="primary">Start Mock Test</button>
       </div>
       <p class="footnote">Source: USCIS publication M-1778 (09/25) &mdash; <em>128 Civics Questions and Answers (2025 version)</em>.</p>
     </section>
