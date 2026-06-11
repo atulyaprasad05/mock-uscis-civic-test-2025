@@ -336,4 +336,16 @@ async def get_report(authorization: str = Header(...)):
     }
 
 
+@app.get("/mastery")
+async def get_mastery(authorization: str = Header(...)):
+    token = authorization.removeprefix("Bearer ").strip()
+    user_id = get_current_user(token)
+    with get_db() as db:
+        rows = db.execute(
+            "SELECT question_id FROM user_mastery WHERE user_id = ? AND level >= ?",
+            (user_id, MASTERY_THRESHOLD),
+        ).fetchall()
+    return {"mastered": [r["question_id"] for r in rows]}
+
+
 app.mount("/", StaticFiles(directory="../js", html=True), name="frontend")

@@ -1,4 +1,4 @@
-import { selectQuestions, TEST_SIZE } from "./selector.js";
+import { selectQuestions, TEST_SIZE, shuffle } from "./selector.js";
 import {
   buildOptionsForInstance,
   renderQuestion,
@@ -34,6 +34,7 @@ let state = null; // { questions, answers, currentIndex }
 let pendingEmail = null;
 let _prevReportView = "home";
 let _questionsPromise = null;
+let masteredIds = new Set();
 
 function saveProgress(viewName) {
   try {
@@ -55,6 +56,35 @@ function loadProgress() {
   } catch (_) {
     return null;
   }
+}
+
+async function fetchMastery() {
+  const token = getSessionToken();
+  if (!token) return;
+  try {
+    const res = await fetch("/mastery", { headers: { "Authorization": `Bearer ${token}` } });
+    if (!res.ok) return;
+    masteredIds = new Set((await res.json()).mastered);
+  } catch (_) {}
+}
+
+function showMasteryOpt() {
+  const cb = document.getElementById("exclude-mastered-cb");
+  const msgEl = document.getElementById("mastery-count-msg");
+  cb.checked = false;
+  if (masteredIds.size === 0) {
+    msgEl.textContent = "You haven't mastered any questions yet.";
+    cb.disabled = true;
+  } else {
+    msgEl.textContent = `You've mastered ${masteredIds.size} of 128 questions.`;
+    cb.disabled = false;
+  }
+}
+
+async function goToWelcome() {
+  await fetchMastery();
+  showMasteryOpt();
+  showView("welcome");
 }
 
 async function loadQuestionBank() {
@@ -232,7 +262,18 @@ function routeToHomeOrName(name) {
 
 function startNewTest() {
   localStorage.removeItem(STORAGE_KEY);
-  const picked = selectQuestions(allQuestions);
+  let pool = allQuestions;
+  const excludeCb = document.getElementById("exclude-mastered-cb");
+  if (excludeCb?.checked && masteredIds.size > 0) {
+    const unmastered = allQuestions.filter(q => !masteredIds.has(q.id));
+    if (unmastered.length >= TEST_SIZE) {
+      pool = unmastered;
+    } else {
+      const extra = shuffle(allQuestions.filter(q => masteredIds.has(q.id)));
+      pool = [...unmastered, ...extra.slice(0, TEST_SIZE - unmastered.length)];
+    }
+  }
+  const picked = selectQuestions(pool);
   state = {
     questions: picked,
     currentIndex: 0,
@@ -659,13 +700,13 @@ function wire() {
   document.getElementById("name-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleNameSubmit();
   });
-  document.getElementById("btn-learn-mode").addEventListener("click", () => showView("welcome"));
+  document.getElementById("btn-learn-mode").addEventListener("click", goToWelcome);
   document.getElementById("btn-start").addEventListener("click", startNewTest);
   els.submit.addEventListener("click", submitAnswer);
   els.next.addEventListener("click", gotoNext);
   document.getElementById("btn-review").addEventListener("click", showReview);
-  document.getElementById("btn-retake").addEventListener("click", startNewTest);
-  document.getElementById("btn-retake-2").addEventListener("click", startNewTest);
+  document.getElementById("btn-retake").addEventListener("click", goToWelcome);
+  document.getElementById("btn-retake-2").addEventListener("click", goToWelcome);
   document
     .getElementById("btn-back-results")
     .addEventListener("click", () => showView("results"));
@@ -675,7 +716,7 @@ function wire() {
 
   document.getElementById("btn-restart").addEventListener("click", () => {
     document.getElementById("account-dropdown").hidden = true;
-    showView("welcome");
+    goToWelcome();
   });
 
   document.getElementById("btn-account").addEventListener("click", (e) => {
