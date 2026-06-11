@@ -87,6 +87,11 @@ def init_db() -> None:
                 level       INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY (user_id, question_id)
             );
+            CREATE TABLE IF NOT EXISTS sessions (
+                token      TEXT PRIMARY KEY,
+                user_id    INTEGER NOT NULL REFERENCES users(id),
+                expires_at REAL NOT NULL
+            );
         """)
         try:
             db.execute("ALTER TABLE tests ADD COLUMN mode TEXT NOT NULL DEFAULT 'learn'")
@@ -107,9 +112,18 @@ def now_utc() -> str:
 
 def get_current_user(token: str) -> int:
     session = active_sessions.get(token)
-    if not session or time.time() > session["expires_at"]:
+    if session:
+        if time.time() > session["expires_at"]:
+            raise HTTPException(status_code=401, detail="Invalid or expired session.")
+        return session["user_id"]
+    with get_db() as db:
+        row = db.execute(
+            "SELECT user_id, expires_at FROM sessions WHERE token = ?", (token,)
+        ).fetchone()
+    if not row or time.time() > row["expires_at"]:
         raise HTTPException(status_code=401, detail="Invalid or expired session.")
-    return session["user_id"]
+    active_sessions[token] = {"user_id": row["user_id"], "expires_at": row["expires_at"]}
+    return row["user_id"]
 
 
 # --- Models ---
@@ -206,12 +220,14 @@ async def verify_code(req: VerifyCodeRequest):
             user_id = cursor.lastrowid
             is_new_user = True
 
+    expires_at = time.time() + SESSION_TTL
     token = secrets.token_urlsafe(32)
-    active_sessions[token] = {
-        "email": req.email,
-        "user_id": user_id,
-        "expires_at": time.time() + SESSION_TTL,
-    }
+    with get_db() as db:
+        db.execute(
+            "INSERT OR REPLACE INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
+            (token, user_id, expires_at),
+        )
+    active_sessions[token] = {"user_id": user_id, "expires_at": expires_at}
     return {"token": token, "is_new_user": is_new_user}
 
 
